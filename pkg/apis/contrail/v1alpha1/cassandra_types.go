@@ -46,20 +46,21 @@ type CassandraSpec struct {
 // CassandraConfiguration is the Spec for the cassandras API.
 // +k8s:openapi-gen=true
 type CassandraConfiguration struct {
-	Containers     []*Container `json:"containers,omitempty"`
-	ConfigInstance string       `json:"configInstance,omitempty"`
-	ClusterName    string       `json:"clusterName,omitempty"`
-	ListenAddress  string       `json:"listenAddress,omitempty"`
-	Port           *int         `json:"port,omitempty"`
-	CqlPort        *int         `json:"cqlPort,omitempty"`
-	SslStoragePort *int         `json:"sslStoragePort,omitempty"`
-	StoragePort    *int         `json:"storagePort,omitempty"`
-	JmxLocalPort   *int         `json:"jmxLocalPort,omitempty"`
-	MaxHeapSize    string       `json:"maxHeapSize,omitempty"`
-	MinHeapSize    string       `json:"minHeapSize,omitempty"`
-	StartRPC       *bool        `json:"startRPC,omitempty"`
-	Storage        Storage      `json:"storage,omitempty"`
-	MinimumDiskGB  *int         `json:"minimumDiskGB,omitempty"`
+	Containers                       []*Container `json:"containers,omitempty"`
+	ConfigInstance                   string       `json:"configInstance,omitempty"`
+	ClusterName                      string       `json:"clusterName,omitempty"`
+	ListenAddress                    string       `json:"listenAddress,omitempty"`
+	Port                             *int         `json:"port,omitempty"`
+	CqlPort                          *int         `json:"cqlPort,omitempty"`
+	SslStoragePort                   *int         `json:"sslStoragePort,omitempty"`
+	StoragePort                      *int         `json:"storagePort,omitempty"`
+	JmxLocalPort                     *int         `json:"jmxLocalPort,omitempty"`
+	MaxHeapSize                      string       `json:"maxHeapSize,omitempty"`
+	MinHeapSize                      string       `json:"minHeapSize,omitempty"`
+	StartRPC                         *bool        `json:"startRPC,omitempty"`
+	Storage                          Storage      `json:"storage,omitempty"`
+	MinimumDiskGB                    *int         `json:"minimumDiskGB,omitempty"`
+	CassandraParameters CassandraConfigParameters `json:"cassandraParameters,omitempty"`
 }
 
 // CassandraStatus defines the status of the cassandra object.
@@ -77,6 +78,28 @@ type CassandraStatusPorts struct {
 	Port    string `json:"port,omitempty"`
 	CqlPort string `json:"cqlPort,omitempty"`
 	JmxPort string `json:"jmxPort,omitempty"`
+}
+
+// CassandraConfigParameters defines additional parameters for Cassandra confgiuration
+// +k8s:openapi-gen=true
+type CassandraConfigParameters struct {
+	// +kubebuilder:default:=16
+	CompactionThroughputMbPerSec     int          `json:"compactionThroughputMbPerSec,omitempty"`
+	// +kubebuilder:default:=32
+	ConcurrentReads                  int          `json:"concurrentReads,omitempty"`
+	// +kubebuilder:default:=32
+	ConcurrentWrites                 int          `json:"concurrentWrites,omitempty"`
+	// +kubebuilder:validation:Enum=heap_buffers;offheap_buffers;offheap_objects
+	// +kubebuilder:default:=heap_buffers
+	MemtableAllocationType           string       `json:"memtableAllocationType,omitempty"`
+	// +kubebuilder:default:=1
+	ConcurrentCompactors             int          `json:"concurrentCompactors,omitempty"`
+	// +kubebuilder:default:=2
+	MemtableFlushWriters             int          `json:"memtableFlushWriters,omitempty"`
+	// +kubebuilder:default:=32
+	ConcurrentCounterWrites          int          `json:"concurrentCounterWrites,omitempty"`
+	// +kubebuilder:default:=32
+	ConcurrentMaterializedViewWrites int          `json:"concurrentMaterializedViewWrites,omitempty"`
 }
 
 // CassandraList contains a list of Cassandra.
@@ -124,20 +147,21 @@ func (c *Cassandra) InstanceConfiguration(request reconcile.Request,
 
 		var cassandraConfigBuffer bytes.Buffer
 		err = configtemplates.CassandraConfig.Execute(&cassandraConfigBuffer, struct {
-			ClusterName         string
-			Seeds               string
-			StoragePort         string
-			SslStoragePort      string
-			ListenAddress       string
-			BroadcastAddress    string
-			CqlPort             string
-			StartRPC            string
-			RPCPort             string
-			JmxLocalPort        string
-			RPCAddress          string
-			RPCBroadcastAddress string
-			KeystorePassword    string
-			TruststorePassword  string
+			ClusterName                      string
+			Seeds                            string
+			StoragePort                      string
+			SslStoragePort                   string
+			ListenAddress                    string
+			BroadcastAddress                 string
+			CqlPort                          string
+			StartRPC                         string
+			RPCPort                          string
+			JmxLocalPort                     string
+			RPCAddress                       string
+			RPCBroadcastAddress              string
+			KeystorePassword                 string
+			TruststorePassword               string
+			Parameters CassandraConfigParameters
 		}{
 			ClusterName:         cassandraConfig.ClusterName,
 			Seeds:               seedsListString,
@@ -153,6 +177,7 @@ func (c *Cassandra) InstanceConfiguration(request reconcile.Request,
 			RPCBroadcastAddress: pod.Status.PodIP,
 			KeystorePassword:    string(cassandraSecret.Data["keystorePassword"]),
 			TruststorePassword:  string(cassandraSecret.Data["truststorePassword"]),
+			Parameters: c.Spec.ServiceConfiguration.CassandraParameters,
 		})
 		if err != nil {
 			return err
