@@ -106,6 +106,7 @@ ssl_options.keyfile = /etc/certificates/server-key-{{ .PodIP }}.pem
 ssl_options.certfile = /etc/certificates/server-{{ .PodIP }}.crt
 ssl_options.verify = verify_peer
 ssl_options.fail_if_no_peer_cert = true
+log.file.level = {{ or .LogLevel "info" }}
 {{ if .MirroredQueueMode }}mirrored_queue_mode = {{ .MirroredQueueMode }}{{ end }}
 {{ if .TCPListenOptions.Backlog }}tcp_listen_options.backlog = {{ .TCPListenOptions.Backlog }}{{ end }}
 {{ if .TCPListenOptions.Nodelay }}tcp_listen_options.nodelay = {{ .TCPListenOptions.Nodelay }}{{ end }}

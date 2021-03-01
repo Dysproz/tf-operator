@@ -99,6 +99,10 @@ type PodConfiguration struct {
 	// Use 0.0.0.0 for isntrospection ports
 	// +optional
 	IntrospectListenAll *bool `json:"introspectListenAll,omitempty"`
+	// Kubernetes Cluster Configuration
+	// +kubebuilder:validation:Enum=info;debug;warning;error;critical;none
+	// +optional
+	LogLevel string `json:"logLevel,omitempty"`
 }
 
 //GetReplicas is used to get number of desired pods.

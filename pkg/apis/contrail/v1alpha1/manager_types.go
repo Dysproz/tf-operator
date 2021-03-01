@@ -100,6 +100,10 @@ type ManagerConfiguration struct {
 	// Kubernetes Cluster Configuration
 	// +optional
 	ClusterConfig *KubernetesClusterConfig `json:"clusterConfig,omitempty"`
+	// Kubernetes Cluster Configuration
+	// +kubebuilder:validation:Enum=info;debug;warning;error;critical;none
+	// +optional
+	LogLevel string `json:"logLevel,omitempty"`
 }
 
 // ManagerStatus defines the observed state of Manager.
